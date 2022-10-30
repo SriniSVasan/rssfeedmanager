@@ -1,0 +1,811 @@
+package com.samco.rssfeed.controller;
+import java.util.*;
+
+import com.samco.rssfeed.service.FeedRSSParser;
+import com.samco.rssfeed.user.RssFeedUser;
+public class FeedRssChannelController {
+	
+	public static void main(String args[]) 
+	{
+		ArrayList<RssFeedUser> users=new ArrayList<>();
+		RssFeedUser rssuser=new RssFeedUser();
+		Scanner sc=new Scanner(System.in);  
+		System.out.print("Enter Name ");  
+		rssuser.setName(sc.next());  
+		System.out.print("Enter Password [enter first four letter of name followed by dob year(fourdigit) ");  
+		rssuser.setPwd(sc.next()); 
+		System.out.print("Enter DOB (dd/mm/yyyy) format "); 
+		rssuser.setDob(sc.next());
+		
+		FeedRSSParser parser =new FeedRSSParser();
+		parser.showDetailsByUser(rssuser.getName());
+		
+	}
+
+}
+
+//////
+
+package com.samco.rssfeed.model;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
+public class FeedRssChannel {
+	
+   String title;
+   String linkUrl;
+   String description;
+   String language;
+   ArrayList<RssItem> rssItem;
+public String getTitle() {
+	return title;
+}
+public void setTitle(String title) {
+	this.title = title;
+}
+public String getLinkUrl() {
+	return linkUrl;
+}
+public void setLinkUrl(String linkUrl) {
+	this.linkUrl = linkUrl;
+}
+public String getDescription() {
+	return description;
+}
+public void setDescription(String description) {
+	this.description = description;
+}
+public String getLanguage() {
+	return language;
+}
+public void setLanguage(String language) {
+	this.language = language;
+}
+public ArrayList<RssItem> getRssItem() {
+	return rssItem;
+}
+public void setRssItem(ArrayList<RssItem> rssItem) {
+	this.rssItem = rssItem;
+}
+@Override
+public String toString() {
+	return "FeedRssChannel [title=" + title + ", linkUrl=" + linkUrl + ", description=" + description + ", language="
+			+ language + ", rssItem=" + rssItem + "]";
+}
+
+
+}
+
+///////
+
+
+package com.samco.rssfeed.model;
+
+public class RssItem {
+	
+	@Override
+	public String toString() {
+		return "RssItem [title=" + title + ", linkUrl=" + linkUrl + ", guidUrl=" + guidUrl + ", description="
+				+ description + ", imageTitle=" + imageTitle + ", pubDate=" + pubDate + "]";
+	}
+	String title;
+	String linkUrl;
+	String guidUrl;
+	String description;
+	RSSItemImageTitle imageTitle;
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	public String getLinkUrl() {
+		return linkUrl;
+	}
+	public void setLinkUrl(String linkUrl) {
+		this.linkUrl = linkUrl;
+	}
+	public String getGuidUrl() {
+		return guidUrl;
+	}
+	public void setGuidUrl(String guidUrl) {
+		this.guidUrl = guidUrl;
+	}
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	public RSSItemImageTitle getImageTitle() {
+		return imageTitle;
+	}
+	public void setImageTitle(RSSItemImageTitle imageTitle) {
+		this.imageTitle = imageTitle;
+	}
+	public String getPubDate() {
+		return pubDate;
+	}
+	public void setPubDate(String pubDate) {
+		this.pubDate = pubDate;
+	}
+	String pubDate;
+	
+
+}
+
+
+/////////////
+
+package com.samco.rssfeed.model;
+
+public class RSSItemImageTitle {
+	
+	String title;
+	String linkUrl;
+	String srcUrl;
+	String pubDate;
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	public String getLinkUrl() {
+		return linkUrl;
+	}
+	public void setLinkUrl(String linkUrl) {
+		this.linkUrl = linkUrl;
+	}
+	@Override
+	public String toString() {
+		return "RSSItemImageTitle [title=" + title + ", linkUrl=" + linkUrl + ", srcUrl=" + srcUrl + ", pubDate="
+				+ pubDate + "]";
+	}
+	public String getSrcUrl() {
+		return srcUrl;
+	}
+	public void setSrcUrl(String srcUrl) {
+		this.srcUrl = srcUrl;
+	}
+	public String getPubDate() {
+		return pubDate;
+	}
+	public void setPubDate(String pubDate) {
+		this.pubDate = pubDate;
+	}
+
+}
+
+////////////////////////////////////
+
+package com.samco.rssfeed.service;
+//package de.vogella.rss.read;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Enumeration;
+
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException; 
+import javax.xml.stream.events.Characters;
+import javax.xml.stream.events.StartElement;
+import javax.xml.stream.events.XMLEvent;
+
+
+import javax.xml.namespace.QName;
+import javax.xml.stream.events.Attribute;
+
+
+import com.samco.rssfeed.model.FeedRssChannel;
+import com.samco.rssfeed.model.RSSItemImageTitle;
+import com.samco.rssfeed.model.RssItem;
+
+
+
+
+public class FeedRSSParser {
+//    static final String TITLE = "title";
+//    static final String DESCRIPTION = "description";
+//    static final String CHANNEL = "channel";
+//    static final String LANGUAGE = "language";
+//    static final String COPYRIGHT = "copyright";
+//    static final String LINK = "link";
+//    static final String AUTHOR = "author";
+//    static final String ITEM = "item";
+//    static final String PUB_DATE = "pubDate";
+//    static final String GUID = "guid";
+
+    //final URL url;
+    StringReader reader;
+    String path;
+    
+    public FeedRSSParser() {
+    	
+    }
+
+    public FeedRSSParser(String path) {
+        try {
+        	this.path=path;
+         
+            
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    
+    public FeedRssChannel readFeed() throws XMLStreamException {
+    	
+    	  XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+          // Setup a new eventReader
+          
+    	  InputStream in = read();
+         int i=0;
+ 
+          XMLEventReader eventReader = null;
+		try {
+			eventReader = inputFactory.createXMLEventReader(in);
+		} catch (XMLStreamException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+          FeedRssChannel channel=new FeedRssChannel();
+          RssItem itm=null;
+          RSSItemImageTitle imgTitle=null;
+          boolean title=false,link=false,description=false,items=false;
+          ArrayList<RssItem> itms=new ArrayList<RssItem>();
+    	while (eventReader.hasNext()) {
+    	    XMLEvent nextEvent = null;
+			try {
+				nextEvent = eventReader.nextEvent();
+				
+			} catch (XMLStreamException e) {
+			//	System.out.println("exectoin "+e);
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	    if (nextEvent!=null && nextEvent.isStartElement()) {
+    	        StartElement startElement = nextEvent.asStartElement();    	 
+    	        String val=startElement.getName().getLocalPart();
+    	      //  System.out.println("startelement "+val);
+    	        
+    	        switch (val) {    	       
+    	        case "channel":
+    	        	break;
+    	            case "title":   
+    	            	if (!items)
+    	            	{
+    	            	 nextEvent = eventReader.nextEvent();
+    	        //    	 System.out.println(nextEvent);
+    	            	 if (nextEvent.asCharacters().getData().trim().length()==0)
+    	            		 nextEvent = eventReader.nextEvent();
+    	            	 if (channel.getTitle()==null)
+    	            	channel.setTitle(nextEvent.asCharacters().getData());   
+    	            	}
+    	            	else
+    	            	{
+    	            	 nextEvent = eventReader.nextEvent();
+    	            	 nextEvent = eventReader.nextEvent();
+    	          //  	  System.out.println("item title "+nextEvent);	
+    	            	 if (itm!=null)
+    	            	 {
+    	            		 itm.setTitle(nextEvent.asCharacters().getData());
+    	            	 }
+   						
+    	            	}
+    	                break;
+    	            case "link":
+    	            	if (!items)
+    	            	{
+    	                nextEvent = eventReader.nextEvent();
+    	            //    System.out.println(nextEvent);
+    	                channel.setLinkUrl(nextEvent.asCharacters().getData()); 
+    	            	}
+    	            	else
+    	            	{
+    	            		 nextEvent = eventReader.nextEvent();
+      					//	 System.out.println("item link "+nextEvent);
+      						 if (itm!=null)
+        	            	 {
+        	            		 itm.setLinkUrl(nextEvent.asCharacters().getData());
+        	            	 }
+    	            	}
+    	                break;
+    	            case "description":    	 
+    	            	if (!items)
+    	            	{
+    	                nextEvent = eventReader.nextEvent();
+    	                if (nextEvent.asCharacters().getData().trim().length()==0)
+   	            		 nextEvent = eventReader.nextEvent();
+    	               // System.out.println(nextEvent);
+    	                if (channel.getDescription()==null)
+        	            	channel.setDescription(nextEvent.asCharacters().getData());  
+    	            	}
+    	            	else
+    	            	{
+    	            		 nextEvent = eventReader.nextEvent();
+    	            		 nextEvent = eventReader.nextEvent();
+      					//	 System.out.println("item description "+nextEvent);	
+      						 if (itm!=null)
+        	            	 {
+        	            		 itm.setDescription(nextEvent.asCharacters().getData());  
+        	            	 }
+    	            		
+    	            	}
+    	                break; 	            
+    	            
+    	            case "language":
+    	                nextEvent = eventReader.nextEvent();
+    	                //System.out.println(nextEvent);
+    	                channel.setLanguage(nextEvent.asCharacters().getData());    	               
+    	                break;
+    	                
+    	            case "item":
+    	            	 if (itm!=null)
+    	            	 {
+    	            		 itms.add(itm);
+    	            	 }
+    	            	 itm=new RssItem();
+    	            	 items=true;
+				         break;	   
+    	         
+					case "guid":
+						nextEvent = eventReader.nextEvent();
+						//System.out.println("guid "+nextEvent);	
+						itm.setGuidUrl(nextEvent.asCharacters().getData());
+						break;
+						
+					case "image":
+						imgTitle=new RSSItemImageTitle();
+						//nextEvent = eventReader.nextEvent();
+						//  StartElement element = event.asStartElement();
+					//	  startElement.getAttributeByName(null)
+						//System.out.println("image "+nextEvent);	
+						 Attribute tit = startElement.getAttributeByName(new QName("title"));
+						 imgTitle.setTitle(tit.getValue());
+						 Attribute lik = startElement.getAttributeByName(new QName("link"));
+						 imgTitle.setLinkUrl(lik.getValue());
+						 Attribute srcs = startElement.getAttributeByName(new QName("src"));
+						 imgTitle.setSrcUrl(srcs.getValue());
+						 if (itm!=null)
+						 {
+							 itm.setImageTitle(imgTitle);
+						 }
+						 
+						 
+	                        break;
+						//itm.setGuidUrl(nextEvent.asCharacters().getData());
+							
+					
+					case "pubDate":
+						  nextEvent = eventReader.nextEvent();
+						  //System.out.println("pubdate1 "+nextEvent);						 
+						itm.setPubDate(nextEvent.asCharacters().getData());
+						break;   
+    
+    	        }
+    	    }
+    	    if (nextEvent!=null && nextEvent.isEndElement()) {
+//    	        EndElement endElement = nextEvent.asEndElement();
+//    	        if (endElement.getName().getLocalPart().equals("website")) {
+//    	            websites.add(website);
+//    	        }
+    	    }
+    	   // itms.add(itm);
+    	}
+    	channel.setRssItem(itms);
+    	//System.out.println(channel);
+    	return channel;
+    }
+    
+    
+   
+
+
+    private InputStream read() {
+    	 FileInputStream fin=null;
+        try {
+         // InputStream in =new FileInputStream(new File());
+        	System.out.println(this.path+"rssfeed.xml");
+           fin=new FileInputStream(this.path+"rssfeed.xml");    
+        	//  return url.openStream();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return fin;
+    }
+    
+    public void showDetailsByUser(String username)
+    {
+     ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+   	 URL resource =classLoader.getResource("resources");
+   	// System.out.println("original "+resource.getPath().toString());
+   	 this.path=resource.getPath().toString();//.substring(6);
+  // 	 System.out.println(this.path);
+   	// FeedRSSParser parser =new FeedRSSParser(path);
+   	 
+
+      try {
+		FeedRssChannel channel=readFeed();
+		System.out.println("please use the follow urls to access the news");
+   	    channel.getRssItem().stream().map(p->p.getLinkUrl()).forEach(System.out::println);
+   	   
+	} catch (XMLStreamException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+      
+    }
+    public static void main(String[] args) throws URISyntaxException, IOException {
+        
+//    	 ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+//    	 URL resource =classLoader.getResource("resources");
+//    	 System.out.println("original "+resource.getPath().toString());
+//    	 String path=resource.getPath().toString();//.substring(6);
+//    	 System.out.println(path);
+//    	 FeedRSSParser parser =new FeedRSSParser(path);
+//    	 
+//
+//       try {
+//		FeedRssChannel channel=parser.readFeed();
+//    	   
+//    	   
+//	} catch (XMLStreamException e) {
+//		// TODO Auto-generated catch block
+//		e.printStackTrace();
+//	}
+   
+
+    }
+}
+
+////////////////////////////////////////
+
+package com.samco.rssfeed.user;
+
+public class RssFeedUser {
+
+	 String name;
+	 String pwd;
+	 String dob;
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getPwd() {
+		return pwd;
+	}
+	public void setPwd(String pwd) {
+		this.pwd = pwd;
+	}
+	public String getDob() {
+		return dob;
+	}
+	public void setDob(String dob) {
+		this.dob = dob;
+	}
+	 
+	 
+	 
+}
+
+/////////////////////////
+
+under resources folder
+src/resources/rssfeed.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<rss
+	xmlns:media="http://search.yahoo.com/mrss/"
+	xmlns:content="http://search.yahoo.com/mrss/" version="2.0">
+	<channel>
+		<title><![CDATA[ Top CIO News | Enterprise IT, Enterprise Technology, Tech Industry News - ET CIO : ETCIO.com ]]></title>
+		<link>https://cio.economictimes.indiatimes.com/rss/topstories</link>
+		<description>
+			<![CDATA[ Find the latest information & technology news, views and updates from all top sources for the Indian IT industry. ]]>
+		</description>
+		<language>en-us</language>
+		<item>
+			<title>
+				<![CDATA[ Effective data management critical to business growth: Dhanesh Padmanabhan, Lendingkart ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/big-data/effective-data-management-critical-to-business-growth-dhanesh-padmanabhan-lendingkart/95131560?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/big-data/effective-data-management-critical-to-business-growth-dhanesh-padmanabhan-lendingkart/95131560?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ An effective data management strategy is more crucial than ever as businesses depend more on intangible assets to generate value. Here are a few trends highlighted by Dhanesh Padmanabhan, Chief Data Scientist, Lendingkart, that could influence how organizations approach data management. ]]>
+			</description>
+			<image title="Effective data management critical to business growth: Dhanesh Padmanabhan, Lendingkart" link="https://cio.economictimes.indiatimes.com/news/big-data/effective-data-management-critical-to-business-growth-dhanesh-padmanabhan-lendingkart/95131560?utm_source=RSS&#38;=ETRSS" src="https://etimg.etb2bimg.com/photo/effective-data-management-critical-to-business-growth-dhanesh-padmanabhan-lendingkart-size-71094/95131560.cms"/>
+			<pubDate>2022-10-28T09:08:36+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ Cyber risk profiling: CISOs strategize risk mitigation ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/corporate-news/cyber-risk-profiling-cisos-strategize-risk-mitigation/95110004?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/corporate-news/cyber-risk-profiling-cisos-strategize-risk-mitigation/95110004?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ Post-pandemic, the digital transformation agenda for most organizations accelerated like never before. Along with opportunities, t organizations now face large surface attacks and infiltration of data centers, making it imperative for CISOs to look at holistic risk assessment and mitigation ]]>
+			</description>
+			<image title="Cyber risk profiling: CISOs strategize risk mitigation" link="https://cio.economictimes.indiatimes.com/news/corporate-news/cyber-risk-profiling-cisos-strategize-risk-mitigation/95110004?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/cyber-risk-profiling-cisos-strategize-risk-mitigation-size-118896/95110004.cms"/>
+			<pubDate>2022-10-27T08:36:09+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ CISO�s pick for 2023 cybersecurity stack: What's in and what's out ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/digital-security/cisos-pick-for-2023-cybersecurity-stack-whats-in-and-whats-out/94977702?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/digital-security/cisos-pick-for-2023-cybersecurity-stack-whats-in-and-whats-out/94977702?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ As they watch and plan for the year 2023, cybersecurity executives from the leading companies across industries evaluate growing trends in the security spiral and unveil the next step in proactivity. ]]>
+			</description>
+			<image title="CISO�s pick for 2023 cybersecurity stack: What's in and what's out" link="https://cio.economictimes.indiatimes.com/news/digital-security/cisos-pick-for-2023-cybersecurity-stack-whats-in-and-whats-out/94977702?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/ciso-s-pick-for-2023-cybersecurity-stack-what-s-in-and-what-s-out-size-34558/94977702.cms"/>
+			<pubDate>2022-10-26T09:23:13+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ Edge Computing: Key trends and focus areas for CIOs ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/next-gen-technologies/edge-computing-key-trends-and-focus-areas-for-the-cio/94692795?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/next-gen-technologies/edge-computing-key-trends-and-focus-areas-for-the-cio/94692795?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ The growth of IoT and the empowerment of real-time analysis in edge devices are helping to create a new era of technological efficiency, cost control, and security. That's a great value proposition for businesses that want to stay competitive and lead their markets. ]]>
+			</description>
+			<image title="Edge Computing: Key trends and focus areas for CIOs" link="https://cio.economictimes.indiatimes.com/news/next-gen-technologies/edge-computing-key-trends-and-focus-areas-for-the-cio/94692795?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/edge-computing-key-trends-and-focus-areas-for-cios-size-8882/94692795.cms"/>
+			<pubDate>2022-10-26T09:24:38+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ Lendingkart CTO on how fintech firms are safeguarding themselves from cyber security threats ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/strategy-and-management/lendingkart-cto-on-how-fintech-firms-are-safeguarding-themselves-from-cyber-security-threats/95071279?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/strategy-and-management/lendingkart-cto-on-how-fintech-firms-are-safeguarding-themselves-from-cyber-security-threats/95071279?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ As per the IAMAI report � Internet in India, 346MN Indians partake in online transactions including digital payments and e-commerce. In comparison, 331MN people in the USA have used digital transactions! ]]>
+			</description>
+			<image title="Lendingkart CTO on how fintech firms are safeguarding themselves from cyber security threats" link="https://cio.economictimes.indiatimes.com/news/strategy-and-management/lendingkart-cto-on-how-fintech-firms-are-safeguarding-themselves-from-cyber-security-threats/95071279?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/lendingkart-cto-on-how-fintech-firms-are-safeguarding-themselves-from-cyber-security-threats-size-9970/95071279.cms"/>
+			<pubDate>2022-10-25T09:04:02+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ Moving towards building a systemic failsafe mechanism in a bid to protect the fintech ecosystem ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/digital-security/moving-towards-building-a-systemic-failsafe-mechanism-in-a-bid-to-protect-the-fintech-ecosystem/95019834?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/digital-security/moving-towards-building-a-systemic-failsafe-mechanism-in-a-bid-to-protect-the-fintech-ecosystem/95019834?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ Apart from the Annual Percentage Rate (APR), the statement must include all additional fees/charges that the borrower may incur while entering into this agreement, and anything not included in the statement cannot be chargeable to the borrower. ]]>
+			</description>
+			<image title="Moving towards building a systemic failsafe mechanism in a bid to protect the fintech ecosystem" link="https://cio.economictimes.indiatimes.com/news/digital-security/moving-towards-building-a-systemic-failsafe-mechanism-in-a-bid-to-protect-the-fintech-ecosystem/95019834?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/moving-towards-building-a-systemic-failsafe-mechanism-in-a-bid-to-protect-the-fintech-ecosystem-size-14420/95019834.cms"/>
+			<pubDate>2022-10-22T09:24:47+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ �Being bold is the way to win,� says Oracle CEO Safra Catz ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/cloud-computing/being-bold-is-the-way-to-win-says-ceo-safra-catz-oracle/94985258?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/cloud-computing/being-bold-is-the-way-to-win-says-ceo-safra-catz-oracle/94985258?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ At Oracle CloudWorld Safra Catz spoke about enabling customers to navigate the latest market challenges and empower them to transform and emerge stronger. ]]>
+			</description>
+			<image title="�Being bold is the way to win,� says Oracle CEO Safra Catz" link="https://cio.economictimes.indiatimes.com/news/cloud-computing/being-bold-is-the-way-to-win-says-ceo-safra-catz-oracle/94985258?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/being-bold-is-the-way-to-win-says-oracle-ceo-safra-catz-size-15730/94985258.cms"/>
+			<pubDate>2022-10-21T08:00:00+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ Unfolding the future of banking with web3 &amp; metaverse ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/next-gen-technologies/unfolding-the-future-of-banking-with-web3-metaverse/94955362?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/next-gen-technologies/unfolding-the-future-of-banking-with-web3-metaverse/94955362?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ Embracing the web3 and metaverse opportunity will require banks, designers, and security analysts to discover new ways of building trust with customers. This includes well thought through product strategy and mix so that tokenised assets can be transacted . Financial institutions should not simply move into and monetize; rather, they must work hard to establish positive relationships. ]]>
+			</description>
+			<image title="Unfolding the future of banking with web3 &#38; metaverse" link="https://cio.economictimes.indiatimes.com/news/next-gen-technologies/unfolding-the-future-of-banking-with-web3-metaverse/94955362?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/unfolding-the-future-of-banking-with-web3-metaverse-size-11358/94955362.cms"/>
+			<pubDate>2022-10-19T09:04:49+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ Five practical steps to achieve Site Reliability Engineering for SaaS Operations ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/strategy-and-management/five-practical-steps-to-achieve-site-reliability-engineering-for-saas-operations/94930912?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/strategy-and-management/five-practical-steps-to-achieve-site-reliability-engineering-for-saas-operations/94930912?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ Solving operational issues with a software-oriented mindset is essential to driving success in SaaS operations. Perhaps the biggest take away with this approach would be how this allows for reimagination of the current systems and processes by eliminating redundancies and repeating errors by finding the root cause and building a portfolio of operations focused reusable tools and frameworks. ]]>
+			</description>
+			<image title="Five practical steps to achieve Site Reliability Engineering for SaaS Operations" link="https://cio.economictimes.indiatimes.com/news/strategy-and-management/five-practical-steps-to-achieve-site-reliability-engineering-for-saas-operations/94930912?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/five-practical-steps-to-achieve-site-reliability-engineering-for-saas-operations-size-48114/94930912.cms"/>
+			<pubDate>2022-10-18T09:12:26+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ CIO�s handbook to successfully deploy ZTA ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/strategy-and-management/cios-handbook-to-successfully-deploy-zta/94847832?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/strategy-and-management/cios-handbook-to-successfully-deploy-zta/94847832?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ How organizations can improve their security posture by embracing Zero Trust models effectively in the organizational security architecture ]]>
+			</description>
+			<image title="CIO�s handbook to successfully deploy ZTA" link="https://cio.economictimes.indiatimes.com/news/strategy-and-management/cios-handbook-to-successfully-deploy-zta/94847832?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/cio-s-handbook-to-successfully-deploy-zta-size-38300/94847832.cms"/>
+			<pubDate>2022-10-17T08:46:25+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ Here�s how Global Business Services centres drive growth and innovation ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/strategy-and-management/heres-how-global-business-services-centres-drive-growth-and-innovation/94849915?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/strategy-and-management/heres-how-global-business-services-centres-drive-growth-and-innovation/94849915?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ The future belongs to those organizations that are agile and can recognize the imperatives and opportunities that GBS� can leverage. As stewards of change, innovation, and efficiency GBS� can play a pivotal role in the growth of their organizations and the broader capabilities ecosystem. ]]>
+			</description>
+			<image title="Here�s how Global Business Services centres drive growth and innovation" link="https://cio.economictimes.indiatimes.com/news/strategy-and-management/heres-how-global-business-services-centres-drive-growth-and-innovation/94849915?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/here-s-how-global-business-services-centres-drive-growth-and-innovation-size-37514/94849915.cms"/>
+			<pubDate>2022-10-14T09:21:26+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ Women in STEM: Women CXO Speak ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/corporate-news/women-in-stem-women-cxo-speak/94824237?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/corporate-news/women-in-stem-women-cxo-speak/94824237?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ Are there enough women in STEM and are there enough opportunities for women to rise to leadership in tech? Some prominent women CXOs share their viewpoints and experiences. ]]>
+			</description>
+			<image title="Women in STEM: Women CXO Speak" link="https://cio.economictimes.indiatimes.com/news/corporate-news/women-in-stem-women-cxo-speak/94824237?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/women-in-stem-women-cxo-speak-size-66116/94824237.cms"/>
+			<pubDate>2022-10-13T09:22:20+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ Developing a data architecture to drive digitalization ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/strategy-and-management/developing-a-data-architecture-to-drive-digitalization/94667876?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/strategy-and-management/developing-a-data-architecture-to-drive-digitalization/94667876?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ To better manage the data environment, numerous components of data architecture &amp; procedures must be improved to examine, design, construct, transform, and manage. ]]>
+			</description>
+			<image title="Developing a data architecture to drive digitalization" link="https://cio.economictimes.indiatimes.com/news/strategy-and-management/developing-a-data-architecture-to-drive-digitalization/94667876?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/developing-a-data-architecture-to-drive-digitalization-size-138276/94667876.cms"/>
+			<pubDate>2022-10-06T07:51:00+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ New data protection bill draft is coming: 6 ways to ensure data security ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/government-policy/new-data-protection-bill-draft-is-coming-6-ways-to-ensure-data-security/94793311?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/government-policy/new-data-protection-bill-draft-is-coming-6-ways-to-ensure-data-security/94793311?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ The bill is aimed to provide protection of digital privacy to individuals relating to their personal data, specify the flow and usage of data, and create a relationship of trust between persons and entities processing the data. Such regulations are needed to safeguard the data and privacy of citizens. ]]>
+			</description>
+			<image title="New data protection bill draft is coming: 6 ways to ensure data security" link="https://cio.economictimes.indiatimes.com/news/government-policy/new-data-protection-bill-draft-is-coming-6-ways-to-ensure-data-security/94793311?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/new-data-protection-bill-draft-is-coming-6-ways-to-ensure-data-security-size-60432/94793311.cms"/>
+			<pubDate>2022-10-12T08:50:28+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ Yes Bank aligns technology initiatives for business growth ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/strategy-and-management/yes-bank-aligns-technology-initiatives-for-business-growth/94770430?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/strategy-and-management/yes-bank-aligns-technology-initiatives-for-business-growth/94770430?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ Yes Bank�s Chief Information Officer, Mahesh Ramamoorthy shares key initiatives that the bank is working on to accelerate growth. ]]>
+			</description>
+			<image title="Yes Bank aligns technology initiatives for business growth" link="https://cio.economictimes.indiatimes.com/news/strategy-and-management/yes-bank-aligns-technology-initiatives-for-business-growth/94770430?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/yes-bank-aligns-technology-initiatives-for-business-growth-size-8950/94770430.cms"/>
+			<pubDate>2022-10-11T08:00:00+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ The key to upscaling your worth: Atanu Pramanic, CIO, Hindalco ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/corporate-news/the-key-to-upscaling-your-worth-atanu-pramanic-cio-hindalco/94747984?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/corporate-news/the-key-to-upscaling-your-worth-atanu-pramanic-cio-hindalco/94747984?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ Atanu Pramanic, Joint President and CIO, Hindalco Industries, reveals his career secrets in adapting to change in an ever-changing environment ]]>
+			</description>
+			<image title="The key to upscaling your worth: Atanu Pramanic, CIO, Hindalco" link="https://cio.economictimes.indiatimes.com/news/corporate-news/the-key-to-upscaling-your-worth-atanu-pramanic-cio-hindalco/94747984?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/the-key-to-upscaling-your-worth-atanu-pramanic-cio-hindalco-size-46810/94747984.cms"/>
+			<pubDate>2022-10-10T04:42:25+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ HDFC Life adopts cloud for efficient financial reporting ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/cloud-computing/hdfc-life-adopts-cloud-for-efficient-financial-reporting/94654953?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/cloud-computing/hdfc-life-adopts-cloud-for-efficient-financial-reporting/94654953?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ The private life insurer gained a 48 percent improvement across all ETL job loads, allowing business users to perform faster queries on the corporate data warehouse, says Chief Architect and EVP, Sunil Jain. ]]>
+			</description>
+			<image title="HDFC Life adopts cloud for efficient financial reporting" link="https://cio.economictimes.indiatimes.com/news/cloud-computing/hdfc-life-adopts-cloud-for-efficient-financial-reporting/94654953?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/hdfc-life-adopts-cloud-for-efficient-financial-reporting-size-10888/94654953.cms"/>
+			<pubDate>2022-10-05T09:03:32+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ Tata AIG plans to operate over 90 percent on cloud by year-end ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/cloud-computing/tata-aig-plans-to-operate-over-90-per-cent-on-cloud-by-year-end/94627484?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/cloud-computing/tata-aig-plans-to-operate-over-90-per-cent-on-cloud-by-year-end/94627484?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ Tata AIG General Insurance has initiated a variety of protocols and procedures with the objective of comprehensive cloud adoption across all verticals to create future-ready infrastructure. The company is also modernising and moving to microservices-based architecture for all its business applications. ]]>
+			</description>
+			<image title="Tata AIG plans to operate over 90 percent on cloud by year-end" link="https://cio.economictimes.indiatimes.com/news/cloud-computing/tata-aig-plans-to-operate-over-90-per-cent-on-cloud-by-year-end/94627484?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/tata-aig-plans-to-operate-over-90-percent-on-cloud-by-year-end-size-7094/94627484.cms"/>
+			<pubDate>2022-10-04T08:00:00+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ Rajesh Thapar, CISO, Axis Bank unpacks the holistic approach to security ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/digital-security/rajesh-thapar-ciso-axis-bank-unpacks-the-holistic-approach-to-security/94610530?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/digital-security/rajesh-thapar-ciso-axis-bank-unpacks-the-holistic-approach-to-security/94610530?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ Research shows that financial companies experience cyberattacks 300 times more than other industries � highlighting how attractive and lucrative a target they are to cybercriminals. ]]>
+			</description>
+			<image title="Rajesh Thapar, CISO, Axis Bank unpacks the holistic approach to security" link="https://cio.economictimes.indiatimes.com/news/digital-security/rajesh-thapar-ciso-axis-bank-unpacks-the-holistic-approach-to-security/94610530?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/rajesh-thapar-ciso-axis-bank-unpacks-the-holistic-approach-to-security-size-10910/94610530.cms"/>
+			<pubDate>2022-10-03T09:25:21+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ Why software intelligence matters for India's digital economy to thrive globally ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/strategy-and-management/why-software-intelligence-matters-for-indias-digital-economy-to-thrive-globally/94576010?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/strategy-and-management/why-software-intelligence-matters-for-indias-digital-economy-to-thrive-globally/94576010?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ Companies leveraging software intelligence are powering the next wave of India�s rapid digitalization. ]]>
+			</description>
+			<image title="Why software intelligence matters for India's digital economy to thrive globally" link="https://cio.economictimes.indiatimes.com/news/strategy-and-management/why-software-intelligence-matters-for-indias-digital-economy-to-thrive-globally/94576010?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/why-software-intelligence-matters-for-india-s-digital-economy-to-thrive-globally-size-166655/94576010.cms"/>
+			<pubDate>2022-10-01T09:54:02+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ The role of data science in transforming the Indian trucking industry ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/strategy-and-management/the-role-of-data-science-in-transforming-the-indian-trucking-industry/94548223?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/strategy-and-management/the-role-of-data-science-in-transforming-the-indian-trucking-industry/94548223?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ Data Science, AI, and ML have evolved significantly in the last decade, witnessing widespread mainstream deployments across industries and delivering true ROI. In particular, Data Science has emerged as a force multiplier in logistics. ]]>
+			</description>
+			<image title="The role of data science in transforming the Indian trucking industry" link="https://cio.economictimes.indiatimes.com/news/strategy-and-management/the-role-of-data-science-in-transforming-the-indian-trucking-industry/94548223?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/the-role-of-data-science-in-transforming-the-indian-trucking-industry-size-32878/94548223.cms"/>
+			<pubDate>2022-09-30T09:09:21+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ Wipro plans Cloud 3.0 strategy; CIO Anup Purohit offers a peek at his cloud playbook ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/cloud-computing/wipro-plans-cloud-3-0-strategy-cio-anup-purohit-offers-a-peek-at-his-cloud-playbook/94504739?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/cloud-computing/wipro-plans-cloud-3-0-strategy-cio-anup-purohit-offers-a-peek-at-his-cloud-playbook/94504739?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ One of the largest tech services organisations, Wipro, is currently deep in its Cloud 2.0 strategy implementation. However, discussions around its Cloud 3.0 strategy have already started. Anup Purohit, CIO, Wipro throws light on best practices and risks that organisations need to factor in a while embarking on a cloud journey. ]]>
+			</description>
+			<image title="Wipro plans Cloud 3.0 strategy; CIO Anup Purohit offers a peek at his cloud playbook" link="https://cio.economictimes.indiatimes.com/news/cloud-computing/wipro-plans-cloud-3-0-strategy-cio-anup-purohit-offers-a-peek-at-his-cloud-playbook/94504739?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/wipro-plans-cloud-3-0-strategy-cio-anup-purohit-offers-a-peek-at-his-cloud-playbook-size-51698/94504739.cms"/>
+			<pubDate>2022-09-29T08:01:00+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ Drip Capital enhances risk predictability model to counter security hurdles ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/strategy-and-management/drip-capital-enhances-risk-predictability-model-to-counter-security-hurdles/94521312?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/strategy-and-management/drip-capital-enhances-risk-predictability-model-to-counter-security-hurdles/94521312?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ As the company improves its risk assessment model with a resilient data management strategy, they are open to collaborating with partners who can meet the demand for data available via APIs ]]>
+			</description>
+			<image title="Drip Capital enhances risk predictability model to counter security hurdles" link="https://cio.economictimes.indiatimes.com/news/strategy-and-management/drip-capital-enhances-risk-predictability-model-to-counter-security-hurdles/94521312?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/drip-capital-enhances-risk-predictability-model-to-counter-security-hurdles-size-6646/94521312.cms"/>
+			<pubDate>2022-09-29T08:10:02+05:30</pubDate>
+		</item>
+		<item>
+			<title>
+				<![CDATA[ Dr. Anantha Sundararajan appointed as Dream Sports�s first Chief Data Officer ]]>
+			</title>
+			<link>https://cio.economictimes.indiatimes.com/news/corporate-news/dr-anantha-sundararajan-appointed-as-dream-sportss-first-chief-data-officer/94475937?utm_source=RSS&#38;utm_medium=ETRSS</link>
+			<guid>https://cio.economictimes.indiatimes.com/news/corporate-news/dr-anantha-sundararajan-appointed-as-dream-sportss-first-chief-data-officer/94475937?utm_source=RSS&#38;utm_medium=ETRSS</guid>
+			<description>
+				<![CDATA[ Anantha joins Dream Sports from Novartis, whereas Head DSAI &amp; CDO, he played a key role in making Data Science &amp; AI as part of the overarching competitive strategy for the company. ]]>
+			</description>
+			<image title="Dr. Anantha Sundararajan appointed as Dream Sports�s first Chief Data Officer" link="https://cio.economictimes.indiatimes.com/news/corporate-news/dr-anantha-sundararajan-appointed-as-dream-sportss-first-chief-data-officer/94475937?utm_source=RSS&#38;utm_medium=ETRSS" src="https://etimg.etb2bimg.com/photo/dr-anantha-sundararajan-appointed-as-dream-sports-s-first-chief-data-officer-size-100314/94475937.cms"/>
+			<pubDate>2022-09-28T09:05:46+05:30</pubDate>
+		</item>
+	</channel>
+</rss>
+
+//////////////////////////////////////
+
